@@ -5,7 +5,7 @@ const Post = require('../models/post');
 exports.getPosts = (req, res, next) => {
   res.status(200).json({
     posts: [{
-      _id: '1',
+      _id: '2',
       title: 'First Book',
       content: 'Some dummy content!',
       imageUrl: 'images/train.jpg',
@@ -23,10 +23,9 @@ exports.createPost = (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    res.status(422).json({
-      message: 'Validation Failed!',
-      errors: errors.array()
-    })
+    const error = new Error('Validation Failed! Please check the required fields!');
+    error.statusCode = 422;
+    throw error;
   }
   const { title, content } = req.body;
   Post.create({
@@ -44,5 +43,10 @@ exports.createPost = (req, res, next) => {
         post: result
       })
     })
-    .catch(err => console.log(err));
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
 }

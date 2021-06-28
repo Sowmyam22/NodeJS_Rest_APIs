@@ -3,6 +3,10 @@ const path = require('path');
 const express = require('express');
 // const bodyParser = require('body-parser');
 
+/** Multer is a node.js middleware for handling multipart/form-data, which is primarily used for uploading files. **/
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+
 const feedRoutes = require('./routes/feed');
 const sequelize = require('./util/database');
 const User = require('./models/user');
@@ -10,7 +14,34 @@ const Post = require('./models/post');
 
 const app = express();
 
+// disk storage engine gives full control on storing files to disk
+const fileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'images');
+    },
+
+    filename: (req, file, cb) => {
+        // cb(null, new Date().toISOString() + '-' + file.originalname); // genrates the CORS Error
+        cb(null, uuidv4());
+    }
+});
+
+// Function to control which files are accepted
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype === 'image/png' ||
+        file.mimetype === 'image/jpg' ||
+        file.mimetype === 'image/jpeg'
+    ) {
+        cb(null, true);
+    } else {
+        cb(null, false);
+    }
+}
+
 app.use(express.json()); //application/json
+
+//registering the multer
+app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single('image'));
 
 app.use('/images', express.static(path.join(__dirname, 'images')));
 

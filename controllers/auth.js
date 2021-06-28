@@ -2,6 +2,7 @@ const User = require('../models/user');
 
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator/check');
+const jwt = require('jsonwebtoken');
 
 exports.signup = (req, res, next) => {
     const errors = validationResult(req);
@@ -32,6 +33,44 @@ exports.signup = (req, res, next) => {
                 err.statusCode = 500;
             }
 
+            next(err);
+        })
+}
+
+exports.login = (req, res, next) => {
+    const { email, password } = req.body;
+
+    let loadedUser;
+
+    User.findOne({ where: { email: email } })
+        .then(user => {
+            if (!user) {
+                const error = new Error('User nopt found with this Email!');
+                error.statusCode = 401;
+                throw error;
+            }
+
+            loadedUser = user;
+            return bcrypt.compare(password, user.password);
+        })
+        .then(isEqual => {
+            if (!isEqual) {
+                const error = new Error('Wrong password!');
+                error.statusCode = 401;
+                throw error;
+            }
+            // creating a json web token
+            const token = jwt.sign({
+                email: loadedUser.email,
+                userId: loadedUser._id.toString()
+            }, 'secret', { expiresIn: '1h' });
+
+            res.status(200).json({ token: token, userId: loadedUser._id.toString() })
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
             next(err);
         })
 }

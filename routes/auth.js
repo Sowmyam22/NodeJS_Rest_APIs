@@ -2,10 +2,12 @@ const express = require('express');
 const { body } = require('express-validator/check');
 
 const User = require('../models/user');
+const isAuth = require('../middleware/is-auth');
 
 const router = express.Router();
 
-const { signup, login } = require('../controllers/auth');
+const { signup, login, getUserStatus, updateUserStatus } = require('../controllers/auth');
+const { updatePost } = require('../controllers/feed');
 
 router.put('/signup',
   [
@@ -31,5 +33,15 @@ router.put('/signup',
   ], signup);
 
 router.post('/login', login);
+
+router.get('/status', isAuth, getUserStatus);
+
+router.patch('/status', isAuth,
+  [
+    body('status')
+      .trim()
+      .not()
+      .isEmpty()
+  ], updateUserStatus);
 
 module.exports = router;

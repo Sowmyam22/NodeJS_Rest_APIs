@@ -8,6 +8,7 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 
 const feedRoutes = require('./routes/feed');
+const authRoutes = require('./routes/auth');
 const sequelize = require('./util/database');
 const User = require('./models/user');
 const Post = require('./models/post');
@@ -54,16 +55,22 @@ app.use((req, res, next) => {
 })
 
 app.use('/feed', feedRoutes);
+app.use('/auth', authRoutes);
 
 app.use((error, req, res, next) => {
     console.log(error);
     const status = error.statusCode || 500;
     const message = error.message;
+    const data = error.data;
 
     res.status(status).json({
-        message: message
+        message: message,
+        data: data
     });
 })
+
+Post.belongsTo(User, { constraints: true, onDelete: 'CASCADE' });
+User.hasMany(Post);
 
 // sequelize.sync({ force: true })    // used to override the tables in the database
 sequelize.sync()

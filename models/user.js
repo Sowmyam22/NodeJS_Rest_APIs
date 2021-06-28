@@ -23,8 +23,26 @@ const User = sequelize.define('user', {
     },
     status: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        defaultValue: 'I am new!'
+    },
+    myPosts: { 
+        type: Sequelize.STRING, 
+        get: function() {
+            return JSON.parse(this.getDataValue('posts'));
+        }, 
+        set: function(val) {
+            return this.setDataValue('posts', JSON.stringify(val));
+        }
     }
 });
+
+// User.associate = function(models) {
+//     User.hasMany(models.Post, {
+//       foreignKey: 'user_id',
+//       as: 'post',
+//     });
+//   };
+//   return User;
 
 module.exports = User;

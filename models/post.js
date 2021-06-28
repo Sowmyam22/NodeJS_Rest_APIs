@@ -27,4 +27,13 @@ const Post = sequelize.define('post', {
     }
 });
 
+// Post.associate = function(models) {
+//     Post.belongsTo(models.User, {
+//       foreignKey: 'user_id',
+//       as: 'user',
+//       onDelete: 'CASCADE',
+//     });
+//   };
+//   return Post;
+
 module.exports = Post;

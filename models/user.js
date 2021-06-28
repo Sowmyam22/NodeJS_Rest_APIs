@@ -1,3 +1,4 @@
+const { ABSTRACT } = require('sequelize');
 const Sequelize = require('sequelize');
 
 const sequelize = require('../util/database');
@@ -26,15 +27,15 @@ const User = sequelize.define('user', {
         allowNull: false,
         defaultValue: 'I am new!'
     },
-    myPosts: { 
-        type: Sequelize.STRING, 
-        get: function() {
-            return JSON.parse(this.getDataValue('posts'));
-        }, 
-        set: function(val) {
-            return this.setDataValue('posts', JSON.stringify(val));
-        }
-    }
+    // myPosts: { 
+    //     type: Sequelize.STRING, 
+    //     get: function() {
+    //         return JSON.parse(this.getDataValue('posts'));
+    //     }, 
+    //     set: function(val) {
+    //         return this.setDataValue('posts', JSON.stringify(val));
+    //     }
+    // }
 });
 
 // User.associate = function(models) {

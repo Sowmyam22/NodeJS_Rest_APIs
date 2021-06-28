@@ -4,6 +4,8 @@ const path = require('path');
 const { validationResult } = require('express-validator/check');
 
 const Post = require('../models/post');
+const User = require('../models/user');
+const { post } = require('../routes/feed');
 
 exports.getPosts = (req, res, next) => {
   const currentPage = req.query.page || 1;
@@ -53,28 +55,34 @@ exports.createPost = (req, res, next) => {
   const { title, content } = req.body;
   // const imageUrl = req.file.path;
   const imageUrl = req.file.path.replace("\\", "/");
+  let creator;
 
-  Post.create({
-    title: title,
-    content: content,
-    imageUrl: imageUrl,
-    creator: {
-      name: 'Sowmya'
-    },
-  })
-    .then(result => {
-      console.log(result);
-      res.status(201).json({
-        message: 'Post created Successfully!',
-        post: result
+  User.findByPk(req.userId)
+    .then(user => {
+      creator = user;
+
+      const post = new Post({
+        title: title,
+        content: content,
+        imageUrl: imageUrl,
+        creator: user,
+        userId: user._id
       })
+      post.save()
+        .then(result => {
+          res.status(201).json({
+            message: 'Post created Successfully!',
+            post: post,
+            creator: { _id: creator._id, name: creator.name }
+          })
+        })
     })
     .catch(err => {
       if (!err.statusCode) {
         err.statusCode = 500;
       }
       next(err);
-    });
+    })
 }
 
 exports.getPost = (req, res, next) => {
@@ -132,6 +140,12 @@ exports.updatePost = (req, res, next) => {
         throw error;
       }
 
+      if (post.creator._id !== parseInt(req.userId)) {
+        const error = new Error('Not Authorized');
+        error.statusCode = 403;
+        throw error;
+      }
+
       if (imageUrl !== post.imageUrl) {
         clearImage(post.imageUrl);
       }
@@ -162,6 +176,12 @@ exports.deletePost = (req, res, next) => {
       if (!post) {
         const error = new Error('Post not found!');
         error.statusCode = 500;
+        throw error;
+      }
+
+      if (post.creator._id !== parseInt(req.userId)) {
+        const error = new Error('Not Authorized');
+        error.statusCode = 403;
         throw error;
       }
 
